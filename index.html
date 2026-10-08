@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#F4EDFF">
+<title>我用 AI 用成了鼠鼠。。。</title>
+<style>:root{--bg:#F4EDFF;--ink:#1D2040;--sub:#5F6385;--line:#D9D2EE;--white:#fff;--mark:#FFE14D;--pink:#FF9DB5;--ac:#7A5CFF;--tint:#EDE7FF;
+--sans:"PingFang SC","HarmonyOS Sans SC","Noto Sans SC","Noto Sans CJK SC","Microsoft YaHei",system-ui,sans-serif;
+--serif:"Songti SC","Noto Serif SC","Noto Serif CJK SC","Source Han Serif SC","STSong",serif;
+--shadow:0 4px 0 var(--ink)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px}
+body{min-height:100vh;min-height:100dvh;display:flex;justify-content:center;background-image:radial-gradient(#E3D8FF 2px,transparent 2.5px);background-size:26px 26px}
+#app{width:100%;max-width:480px;min-height:100vh;min-height:100dvh;padding:20px 18px 40px;display:flex;flex-direction:column}
+button,a,.opt{touch-action:manipulation}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+h1,h2,h3,p{margin:0}
+.small{font-size:12.5px;color:var(--sub);line-height:1.6}
+/* 气泡 */
+.bub{max-width:86%;padding:11px 16px;border-radius:22px;font-size:16px;line-height:1.55;border:2.5px solid var(--ink);box-shadow:var(--shadow)}
+.bub.ai{background:var(--white);border-bottom-left-radius:6px;align-self:flex-start}
+.bub.me{background:var(--mark);color:var(--ink);border-bottom-right-radius:6px;align-self:flex-end}
+.thread{display:flex;flex-direction:column;gap:12px}
+.read{align-self:flex-end;font-size:11.5px;color:var(--sub);margin-top:-2px}
+/* 首页 */
+.hero{padding-top:14px;display:flex;flex-direction:column;gap:18px;flex:1}
+.hero h1{font-size:40px;line-height:1.2;font-weight:900;letter-spacing:-.5px;text-align:center}
+.hero .sub{font-size:16px;color:var(--sub);text-align:center}
+.zoo{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pet{background:var(--tint);border:3px solid var(--ink);border-radius:26px;box-shadow:var(--shadow);padding:6px 6px 8px;text-align:center;font-weight:900;font-size:15px;transform:rotate(-2.5deg)}
+.pet:nth-child(even){transform:rotate(2.5deg) translateY(4px)}
+.pet svg{display:block;width:100%;height:auto}
+.meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.meta span{background:var(--white);border:2px solid var(--ink);border-radius:99px;padding:3px 12px;font-size:13px;font-weight:700}
+.btn{display:block;width:100%;background:var(--mark);color:var(--ink);border:3px solid var(--ink);box-shadow:var(--shadow);border-radius:20px;padding:15px 20px;font-size:19px;font-weight:900;text-align:center;text-decoration:none;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.btn.ghost{background:var(--white)}
+.btn.mark{background:var(--pink)}
+.btn[disabled]{opacity:.5}
+.disc{margin-top:14px;text-align:center}
+@keyframes bob{50%{transform:translateY(-6px)}}
+/* 答题 */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;color:var(--sub);font-weight:700}
+.top .back{padding:8px 4px;font-weight:800;color:var(--ink)}
+.top .back[disabled]{opacity:.25}
+.bar{height:14px;background:var(--white);border:2.5px solid var(--ink);border-radius:99px;margin:12px 0 30px;position:relative}
+.bar i{display:block;height:100%;background:var(--pink);border-radius:99px;transition:width .25s}
+.walker{position:absolute;top:-17px;width:36px;height:36px;margin-left:-18px;transition:left .25s}
+.walker svg{width:100%;height:100%;display:block}
+.q{display:flex;flex-direction:column;gap:14px}
+.q .bub.ai{font-size:19px;font-weight:800;line-height:1.5;max-width:96%}
+.opts{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.opt{align-self:flex-end;max-width:94%;text-align:left;background:var(--white);border:2.5px solid var(--ink);box-shadow:var(--shadow);border-radius:22px 22px 6px 22px;padding:12px 16px;font-size:16px;line-height:1.5;transition:transform .08s,box-shadow .08s}
+.opt.on{background:var(--mark);transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+@media (hover:hover){.opt:hover{background:#FFF8D1}}
+/* 计算 */
+.calc{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px}
+.calc .row{display:flex;gap:8px}.calc .row svg{width:46px;height:46px;animation:bob .9s infinite}
+.calc .row svg:nth-child(2n){animation-delay:.2s}.calc .row svg:nth-child(3n){animation-delay:.4s}
+.dots{display:inline-flex;gap:4px}.dots i{width:7px;height:7px;border-radius:9px;background:var(--ink);opacity:.25;animation:bl 1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bl{50%{opacity:1}}
+/* 结果 */
+.res{display:flex;flex-direction:column;gap:22px;padding-top:6px}
+.badge{font-size:15px;font-weight:800;color:var(--sub);text-align:center}
+.pic{width:min(62vw,250px);aspect-ratio:1;margin:0 auto;background:var(--tint);border:3.5px solid var(--ink);border-radius:50%;box-shadow:0 6px 0 var(--ink);transform:rotate(-3deg);display:grid;place-items:center;padding:12px}
+.pic svg{width:100%;height:100%;display:block}
+.pname{font-size:44px;line-height:1.1;font-weight:900;color:var(--ink);letter-spacing:-1px;text-align:center;-webkit-text-stroke:0;text-shadow:3px 3px 0 var(--ac)}
+.tag{font-size:18px;font-weight:800;text-align:center}
+.qbox{background:var(--tint);border:3px solid var(--ink);border-radius:24px;padding:18px 16px 12px;display:flex;flex-direction:column;gap:8px}
+.qbox .bub{font-family:var(--serif);font-size:19px;font-weight:700;line-height:1.55;max-width:100%;background:var(--white);color:var(--ink);border-radius:18px 18px 6px 18px}
+.idx{display:flex;align-items:baseline;gap:12px;justify-content:center}
+.idx b{font-size:60px;font-weight:900;line-height:1;color:var(--ink)}
+.idx span{font-size:15px;font-weight:800;color:var(--sub)}
+.meter{height:12px;background:var(--white);border:2.5px solid var(--ink);border-radius:99px;overflow:hidden}.meter i{display:block;height:100%;background:var(--ac)}
+.trait{font-size:17px;font-weight:800;border-left:6px solid var(--mark);padding-left:12px}
+.desc{font-size:16px;color:#33375A;line-height:1.8}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec h3{font-size:19px;font-weight:900}
+.sec ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.sec li{line-height:1.7}
+.sec.card{background:var(--white);border:3px solid var(--ink);box-shadow:var(--shadow);border-radius:24px;padding:18px}
+.blind{background:var(--mark);border:3px solid var(--ink);box-shadow:var(--shadow);border-radius:20px;padding:16px 18px;font-weight:800;font-size:17px;line-height:1.65}
+.dim{display:grid;grid-template-columns:4.6em 1fr 2.2em;gap:10px;align-items:center;font-size:14px}
+.dim b{font-weight:900}.dim .meter{height:12px}.dim span{text-align:right;font-weight:900}
+.poll{display:flex;gap:8px}.poll button{flex:1;background:var(--white);border:2.5px solid var(--ink);border-radius:14px;padding:11px 4px;font-weight:800;font-size:15px;box-shadow:0 3px 0 var(--ink)}
+.poll button.on{background:var(--mark);transform:translateY(3px);box-shadow:none}
+textarea{width:100%;min-height:84px;border:2.5px solid var(--ink);border-radius:16px;padding:12px;font:inherit;font-size:15px;resize:vertical;background:var(--white)}
+/* 弹层 */
+.mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(29,32,64,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--bg);width:100%;max-width:480px;max-height:92vh;max-height:92dvh;-webkit-overflow-scrolling:touch;overflow:auto;border:3px solid var(--ink);border-bottom:0;border-radius:28px 28px 0 0;padding:22px 20px 28px;display:flex;flex-direction:column;gap:14px}
+.sheet h3{font-size:21px;font-weight:900}
+.sheet img{width:100%;border-radius:18px;display:block;border:3px solid var(--ink)}
+.choice{display:flex;flex-direction:column;gap:10px}.choice button{background:var(--white);border:2.5px solid var(--ink);box-shadow:0 3px 0 var(--ink);border-radius:16px;padding:12px 14px;text-align:left;font-weight:800}
+.choice button.on{background:var(--mark);transform:translateY(3px);box-shadow:none}
+.dbg{position:fixed;right:8px;bottom:8px;z-index:30;background:#000;color:#0f0;font:11px monospace;padding:6px 8px;border-radius:8px}
+pre.log{white-space:pre-wrap;word-break:break-all;font:11px/1.4 monospace;background:#fff;padding:10px;border-radius:10px;max-height:40vh;overflow:auto}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (min-width:600px){#app{padding-top:40px}}
+/* ===== v3：更可爱生动 + 结果页层级 ===== */
+.hero{justify-content:center;gap:20px;padding-top:6px}
+@keyframes petA{0%,100%{transform:rotate(-2.5deg) translateY(0)}50%{transform:rotate(-2.5deg) translateY(-7px)}}
+@keyframes petB{0%,100%{transform:rotate(2.5deg) translateY(4px)}50%{transform:rotate(2.5deg) translateY(-3px)}}
+.pet{animation:petA 2.8s ease-in-out infinite}.pet:nth-child(even){animation-name:petB}
+.ask{display:flex;gap:10px;align-items:flex-end}
+.avatar{flex:none;width:58px;height:58px;border-radius:50%;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);padding:4px;background:#fff}
+.avatar svg{width:100%;height:100%;display:block}
+.q .ask .bub.ai{flex:1;min-width:0;max-width:none;border-bottom-left-radius:6px}
+.badge{font-size:15px}
+.note{text-align:center;font-size:14px;color:var(--sub);font-weight:700}
+.pic{position:relative}
+.pic svg{animation:wiggle 3.4s ease-in-out infinite;transform-origin:50% 80%}
+@keyframes wiggle{0%,60%,100%{transform:rotate(0)}68%{transform:rotate(-5deg)}76%{transform:rotate(5deg)}84%{transform:rotate(-3deg)}92%{transform:rotate(0)}}
+.st{position:absolute;width:26px;height:26px;background:var(--mark);border:0;clip-path:polygon(50% 0,62% 36%,100% 38%,70% 60%,80% 100%,50% 76%,20% 100%,30% 60%,0 38%,38% 36%);animation:tw 1.8s ease-in-out infinite}
+.st.s1{top:6%;left:2%}.st.s2{top:14%;right:-2%;width:20px;height:20px;background:var(--pink);animation-delay:.5s}.st.s3{bottom:10%;left:-4%;width:18px;height:18px;background:#fff;animation-delay:1s}
+@keyframes tw{50%{transform:scale(.55) rotate(25deg);opacity:.7}}
+.confetti{position:fixed;top:0;left:0;right:0;height:0;z-index:40;pointer-events:none}
+.confetti i{position:absolute;top:-16px;width:10px;height:14px;animation:fall 2s linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.9}}
+.sec.card h3{display:inline-block;align-self:flex-start;background:var(--mark);border:2.5px solid var(--ink);border-radius:99px;padding:1px 14px;font-size:17px;transform:rotate(-1.5deg)}
+.sec.card.hl{background:var(--tint)}.sec.card.hl h3{background:var(--white)}
+.sec.card.good{background:#E9FAF2}.sec.card.good h3{background:#A8F0CF}
+.sec.card.tip{background:#FFF8D6}.sec.card.tip h3{background:var(--pink)}
+.sec.card ul{margin:0;padding-left:20px}
+.whisper{margin-top:4px;padding:10px 14px;background:#fff;border:2.5px dashed var(--ink);border-radius:16px;font-weight:700;font-size:15px}
+.idxrow{display:flex;align-items:center;gap:14px;margin-top:6px}
+.idxrow b{font-size:54px;line-height:1;font-weight:900}
+.idxname{font-weight:900;font-size:16px}
+.drow{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.dtop{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:baseline}
+.dtop b{font-size:16px;font-weight:900}.dtop .dex{font-size:12.5px;color:var(--sub);font-weight:600}.dtop em{font-style:normal;font-weight:900;font-size:18px}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);font-weight:700}
+.hint{margin-top:10px}
+.divider{display:flex;align-items:center;gap:12px;font-weight:900;color:var(--sub);margin:4px 0}
+.divider:before,.divider:after{content:"";flex:1;height:0;border-top:3px dotted var(--ink);opacity:.35}
+.pair{display:flex;align-items:center;gap:12px}
+.pair .pa{flex:none;width:78px;height:78px;border-radius:50%;border:3px solid var(--ink);background:var(--tint);padding:5px;box-shadow:0 3px 0 var(--ink)}
+.pair .pa svg{width:100%;height:100%;display:block}
+.btn:before{content:"";}
+.opt:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+</style></head>
+<body><div id="app"></div>
+<script>
+/* 《你的 AI 使用人格》题库 + 评分模型（纯数据 + 纯函数，浏览器和 node 通用） */
+const DIMS = {
+  R: { name: '放手度', ex: '愿意把任务交给 AI 去做的程度', lo: '自己动手', hi: '放手交给它',
+       hiT: '你很擅长把事情真的交出去，省下的时间是实打实的。',
+       midT: '你会按事情的轻重，在“自己做”和“交给 AI”之间切换，很灵活。',
+       loT: '你习惯自己握着方向盘，把 AI 当参考。这样很稳，也留下了更多可以交给它的空间。' },
+  V: { name: '查证度', ex: '会不会核对 AI 说的内容', lo: '更信任它', hi: '爱求证',
+       hiT: '你有一道自己的关卡，AI 说的话会先被你认真核对一遍。',
+       midT: '你会核对一部分内容。先定好哪几类“一定要查”，会更省力。',
+       loT: '你更倾向于信任 AI 的回答，轻松高效。遇到重要内容时多核对一下，会更安心。' },
+  C: { name: '掌舵度', ex: '对过程和细节的把控程度', lo: '交给它定', hi: '亲自把关',
+       hiT: '你想亲手决定最终的样子，所以成品很有你的味道。',
+       midT: '重点环节你亲自把关，次要环节放手，配比刚刚好。',
+       loT: '你不太纠结细节，愿意让 AI 来定方向，轻松省心。' },
+  E: { name: '尝鲜度', ex: '试新工具、新用法的热情', lo: '用顺手的', hi: '爱尝鲜',
+       hiT: '你对新玩法有天然的好奇，总能比别人早一步发现新可能。',
+       midT: '有明确好处时你会去试新东西，不盲目追新，也不完全守旧。',
+       loT: '你喜欢用顺手的老办法，稳定省心。' },
+  L: { name: '打磨度', ex: '和 AI 来回修改、追问的多少', lo: '一两轮搞定', hi: '反复打磨',
+       hiT: '你喜欢和 AI 来回多轮，把结果一点点磨到满意。',
+       midT: '你会迭代几轮，通常知道什么时候该收手。',
+       loT: '你倾向一两轮解决，不行就换个办法，效率很高。' },
+  H: { name: '囤货度', ex: '收藏技巧、模板、工具的倾向', lo: '用时现找', hi: '爱囤货',
+       hiT: '你收集的方法比用掉的多，见多识广。',
+       midT: '你会存一些好用的东西，也会真的拿来用，收藏和使用比较平衡。',
+       loT: '你很少囤东西，需要时现想现问，轻装上阵。' }
+};
+const DIM_KEYS = ['R', 'V', 'C', 'E', 'L', 'H'];
+
+/* 选项写法：['选项文字', 'R3 C1'] 表示该选项给托付度+3、掌控欲+1，负数为反向计分 */
+function Q(t, opts) {
+  return { t, o: opts.map(([txt, pts]) => {
+    const v = {}; String(pts).replace(/([RVCELH])(-?\d)/g, (_, d, n) => { v[d] = +n; });
+    return { txt, v };
+  }) };
+}
+
+const QUESTIONS = [
+  Q('周报要交了，你手上只有一堆零散记录。你会：', [
+    ['全部丢给 AI，让它直接出完整成稿', 'R3'],
+    ['先列好三个重点，再让 AI 按重点展开', 'C2 R1'],
+    ['自己写个草稿，让 AI 只负责润色', 'C2 V1 R1'],
+    ['让 AI 给几种写法，挑顺眼的再改', 'E2 R1']]),
+  Q('AI 给了一段很完整的分析，里面有两个数据没写来源。你会：', [
+    ['先用着，有人问再说', 'R3'],
+    ['追问 AI：“这个数据哪来的？”', 'V2 L1 R1'],
+    ['自己去搜一下核对', 'V3 C1'],
+    ['把没把握的删掉，只留我能确认的', 'V2 C1 R-1']]),
+  Q('你让 AI 改一段文案，整体不错，但有一句不像你会说的话。你会：', [
+    ['直接用，差不多就行', 'R3'],
+    ['自己动手把那句改回我的说法', 'C3 R1'],
+    ['告诉它“这句不对”，让它再来一轮', 'L3'],
+    ['让它再出五版，我从里面拼一个', 'E2 L1 C1']]),
+  Q('说到“好用的提示词收藏”，你的情况更接近：', [
+    ['存了一大堆，但很少再打开', 'H3'],
+    ['有几个常用的，隔段时间会整理', 'H2 C1'],
+    ['基本不存，每次现想', 'E1 R1'],
+    ['不存提示词，只存好用的结果', 'H1 R1 V1']]),
+  Q('周末听说出了个新的 AI 工具，你会：', [
+    ['马上注册，十分钟内就玩上了', 'E3'],
+    ['先把教程收藏起来，以后再看', 'H3'],
+    ['先看看大家怎么评价，值得再试', 'V1 E1'],
+    ['手上的够用，不想再换', 'C1 E-1']]),
+  Q('你想让 AI 帮忙做一个三天的旅行计划：', [
+    ['让它直接出完整行程，照着走', 'R3'],
+    ['出完以后，我逐个去查营业时间和路线', 'V3 C1 R1'],
+    ['给它一堆条件，不满意就反复调', 'L3 C1'],
+    ['我先定好必去的点，让它补空档', 'C3 R1']]),
+  Q('AI 连着两次都没理解你的意思，你会：', [
+    ['换个说法再试一次', 'L2 E1'],
+    ['我自己来更快', 'C3 R-1'],
+    ['开个新对话，从头讲清楚', 'L1 C1 E1'],
+    ['把前面的内容整理成背景，一起重新发', 'L2 C1 V1']]),
+  Q('想入门一个陌生领域（比如理财），你更可能：', [
+    ['让 AI 讲一遍，听懂就算', 'R3'],
+    ['AI 讲完，再找书或课程对照一下', 'V3'],
+    ['让它排一份学习计划，存下来', 'H3'],
+    ['边问边学，问到不想问为止', 'L2 E1']]),
+  Q('deadline 逼近，AI 给的结果大概是 80 分：', [
+    ['够用了，交', 'R3'],
+    ['不行，要抠到 95 分才安心', 'C2 L2'],
+    ['我自己补上最后那 20 分', 'C3 V1'],
+    ['再让它跑几遍，看哪一版更好', 'E2 L1']]),
+  Q('同事说“这事让 AI 搞定就行”，你的第一反应是：', [
+    ['试试看，说不定真行', 'E2 R1'],
+    ['先问清楚“搞定”的标准是什么', 'V3 R1'],
+    ['其实我已经在用 AI 搞了，只是没说', 'R2 E1'],
+    ['不太放心，还是自己来', 'C2 V1 R-1']]),
+  Q('一个下午，你和 AI 在同一个问题上聊了二十多轮：', [
+    ['常有的事，改到满意为止', 'L3'],
+    ['有点上头，停不下来', 'L3 R1'],
+    ['聊到这个程度我会停下来，换个思路', 'C2 E1'],
+    ['基本不会，三轮内要么解决要么放弃', 'C1 V1 L-1']]),
+  Q('AI 在回答前加了一句：“我不确定，建议你核实。”你会：', [
+    ['觉得它挺诚实，反而更信它', 'R1 V1'],
+    ['照它说的，去核实一下', 'V3'],
+    ['大概率没错，先往下走', 'R3'],
+    ['觉得它不如直接给结论', 'C1 V1 R-1']]),
+  Q('要做一份 PPT，但完全没思路：', [
+    ['让 AI 出整份大纲和内容', 'R3'],
+    ['让它给三种风格，我来挑', 'E2 R1'],
+    ['先去找灵感和现成提示词，存下来再说', 'H3'],
+    ['我先画好框架，让它帮我填内容', 'C3']]),
+  Q('对于 AI 生成的文字或图片，你的态度是：', [
+    ['能直接用就直接用', 'R3'],
+    ['基本都要自己再动手改', 'C3 R1'],
+    ['拿来当灵感，然后自己重做', 'E2 C1'],
+    ['好的先存进素材库，以后可能用', 'H3']]),
+  Q('遇到想查的问题，你现在的习惯是：', [
+    ['优先问 AI，已经不太搜了', 'R3'],
+    ['AI 和搜索都开着，对着看', 'V3 R1'],
+    ['看情况，复杂的问题才问 AI', 'E1 R1'],
+    ['主要还是搜索，AI 当辅助', 'V1 C1 R-1']]),
+  Q('AI 突然告诉你：“这个我做不到。”你会：', [
+    ['换个绕过去的问法再试', 'E2 L2'],
+    ['马上换别的工具试试', 'E3'],
+    ['这类事以后我换种方式做', 'V1 R-2'],
+    ['自己接手，把它没做完的做完', 'C2']]),
+  Q('你让 AI 改了个 Excel 公式，运行起来没报错：', [
+    ['直接复制过去，能跑就行', 'R3'],
+    ['抽几行数据验证一下结果对不对', 'V3 R1'],
+    ['让它解释一遍，搞懂了再用', 'V1 C1 E1'],
+    ['顺手让它再做几个类似的模板存起来', 'H2 E1']]),
+  Q('凌晨，你想发一条很重要的消息，让 AI 来写：', [
+    ['直接发，它写得比我稳', 'R3'],
+    ['读三遍，改成我平时说话的样子', 'C3'],
+    ['让它写，再让它换几种语气重来', 'L2 E1'],
+    ['留几个备选，明早看一眼再发', 'V1 C1 H1']]),
+  Q('打开一个新对话，你的第一条消息通常是：', [
+    ['把背景、要求、格式一次说清', 'C3 V1'],
+    ['一句话需求，边聊边补', 'L2 R1'],
+    ['套用我存好的提示词模板', 'H3'],
+    ['先随便问点别的，试试它今天状态', 'E2']]),
+  Q('AI 写的东西读起来有明显的“AI 味”：', [
+    ['能交差就行，不纠结', 'R2'],
+    ['逐句改成自己的话', 'C3'],
+    ['让它“再自然一点”，反复调', 'L3'],
+    ['换个 AI 或换种提示再试', 'E2 L1']]),
+  Q('家人问你：“AI 到底靠不靠谱？”你会说：', [
+    ['挺靠谱的，我经常用', 'R2 E1'],
+    ['有用，但重要的事要自己再确认', 'V3'],
+    ['看用在哪，没有统一答案', 'V1 E1 C1'],
+    ['我也在摸索，试了不少', 'E3 H1']]),
+  Q('买东西拿不定主意，你让 AI 帮你选：', [
+    ['它说哪个我就买哪个', 'R3'],
+    ['让它列优缺点，我自己决定', 'C3 R1'],
+    ['再去看真实评测验证一下', 'V3'],
+    ['一直追问，直到我完全满意', 'L3 R1']]),
+  Q('翻看你的 AI 对话列表，大概是：', [
+    ['几百个对话，基本没整理', 'H2 L1'],
+    ['按项目分类，重要的会置顶', 'H3 C1'],
+    ['每个话题都开新的，很少翻旧的', 'E1'],
+    ['很少，聊完就删', 'C1 H-1']]),
+  Q('AI 帮你总结了一篇长文章：', [
+    ['看总结就够了', 'R3'],
+    ['总结加原文关键段落，对一下', 'V3 R1'],
+    ['让它按我习惯的格式重新总结', 'C2 L1'],
+    ['先存下来，改天细看', 'H3']]),
+  Q('你交给 AI 的任务，它做错了：', [
+    ['可能是我提示没写清，重新写', 'L2 C1'],
+    ['它不行，以后别让它做这类事', 'R-2 C1'],
+    ['也许换个模型或工具会好', 'E3'],
+    ['让它自己检查，找出错在哪', 'V2 L1 R1']]),
+  Q('面对一个很复杂的任务（比如整理几十份资料）：', [
+    ['交给 AI 自己跑完，我等结果', 'R3'],
+    ['分批喂给它，每批我都看一遍', 'C2 V2 R1'],
+    ['先做个小样试试再说', 'E2 V1'],
+    ['去找现成的工作流或模板来套', 'H3 E1']]),
+  Q('如果被要求“不用 AI 过一天”：', [
+    ['很难想象', 'R3'],
+    ['没问题，就是会慢一点', 'R-1 C1'],
+    ['一半的事会拖延，另一半自己做', 'R2 C1'],
+    ['有点想试试看会怎样', 'E2']]),
+  Q('要写一段需要个人观点的内容（比如自我介绍）：', [
+    ['AI 出稿，我签个名', 'R3'],
+    ['我说想法，让它整理语言', 'C2 R1'],
+    ['让它向我提问，通过聊天帮我理清', 'E2 L1'],
+    ['自己写，不想让 AI 碰', 'C3 R-2']]),
+  Q('刷到有人分享“用 AI 一天做完一周的活”：', [
+    ['想知道具体怎么做，先收藏', 'H3 E1'],
+    ['怀疑有点夸张，想先看看细节', 'V3'],
+    ['好像确实能做到，我也在往那个方向走', 'R2 E1'],
+    ['想马上复刻一遍', 'E3']]),
+  Q('AI 给你出了三个方案，看起来都还行：', [
+    ['选第一个，省事', 'R3'],
+    ['让它比较一下再选', 'L1 R1'],
+    ['三个都拆开，拼成我自己的方案', 'C3'],
+    ['再让它多出几个', 'E2 L1']]),
+  Q('有没有那么一件事，你本来不打算用 AI，后来还是用了？', [
+    ['经常，试着试着就用上了', 'E3'],
+    ['有过，用完还会琢磨一下要不要告诉别人', 'V1 R1 C1'],
+    ['很少，我很清楚什么该交给它', 'C3 V1'],
+    ['没有，我不太想', 'R-2 C1']]),
+  Q('AI 的回答里有一处你觉得不太对：', [
+    ['直接指出来，让它改', 'L2 V1'],
+    ['自己去查，看谁对', 'V3'],
+    ['它大概率没错，可能是我想错了', 'R2'],
+    ['突然想把整个回答都重新核对一遍', 'V2 R-2 C1']]),
+  Q('一份很重要的材料，你会用 AI 吗？', [
+    ['用，从头到尾让它参与', 'R3'],
+    ['用，但只在我指定的环节', 'C3 R1'],
+    ['用，并且让两个以上的 AI 互相检查', 'V3 E1 R1'],
+    ['尽量不用，出了错我担不起', 'V2 R-2']]),
+  Q('你学过的那些 AI 技巧，现在的状态是：', [
+    ['学了很多，真正天天用的没几个', 'H3 E1'],
+    ['有一套固定打法，基本不变', 'H2 C2'],
+    ['到处试，没有固定套路', 'E3'],
+    ['没专门学，想到什么就问什么', 'L1 R1']]),
+  Q('AI 的回答特别流畅，语气也特别笃定：', [
+    ['越流畅越想再查一下', 'V3'],
+    ['这会让我更放心', 'R3'],
+    ['我只关心它有没有按我的要求来', 'C3'],
+    ['有时会被说服，过一会儿才想再确认', 'L1 R1 V-1']]),
+  Q('你理想中和 AI 的关系是：', [
+    ['靠得住的助理，交代完就不用管', 'R3'],
+    ['得力的下属，每一步我都要过目', 'C3 V1'],
+    ['聊得来的搭档，边聊边想', 'L2 E1'],
+    ['有意思的玩具，总有新玩法', 'E3']])
+];
+
+/* 人格：target 为六个维度的“典型分”（0-100），用加权距离判定，不由单一维度决定 */
+const PERSONAS = {
+  jian: {
+    name: '较真鹅鹅型', color: '#E8472F', tint: '#FDECE8',
+    tag: '它干活，我验收，样样都要过我这关',
+    quote: '让 AI 干活可以，想让我信它？先交出处。',
+    says: ['“这个数据来源是哪？”', '“我再核实一下。”', '“它说得挺好，但我再看看。”'],
+    friend: { id: 'tuo', why: '你负责质检，它负责产能，刚好互补。' },
+    foe: { id: 'la', why: '你想先核对，它想再改一版，吵吵闹闹也很有默契。' },
+    target: { R: 75, V: 72, C: 70, E: 35, L: 40, H: 35 },
+    index: { d: 'V', label: '查证指数', ex: '越高，越爱核对 AI 说的话', f: s => s.V },
+    trait: '你会把 AI 的每句话认真过一遍，靠谱就是你的招牌。',
+    desc: '你带 AI 像带一位聪明的实习生：活放心交给它，结果要亲自验收。追问来源、对照原文、把不顺口的句子改成自己的话——因为署名的是你，你想对结果负责。',
+    analysis: '较真鹅鹅型的特点是：高查证、高掌舵，同时依然常用 AI。你的方式是“让 AI 铺路，自己把关”：AI 负责出初稿，你负责拍板。',
+    strengths: ['靠谱：AI 说错的地方，多半会被你拦下来', '心里有标准：很清楚什么样才算好结果', '敢把 AI 用在重要的事情上，也不慌'],
+    risks: ['核对要花时间，有时会比自己做还累', '每一步都想把关，可以试着多放手一点点', '精力平均分给每一句话，可以把重点放在最关键的那几处'],
+    whisper: '你很会核对“它说得对不对”，下一步可以试试想想“哪些事其实不用查”。',
+    scenes: ['AI 给了份漂亮的分析，你会花二十分钟逐条核对数据', '让 AI 改完文案，你又按自己的口吻调了一遍', '同事说“AI 搞定了”，你会先问一句“怎么做的？”'],
+    mode: '分级核对：先定好哪些内容必须核实（数字、引用、结论），其余放心交给它。',
+    tips: ['在任务里直接说“标出哪些是推断、哪些有出处”，把一部分核对前置', '列一份“免检清单”：格式整理、语气润色、头脑风暴可以不逐条查', '重要内容用第二个 AI 或搜索交叉验证，不用全靠自己通读']
+  },
+  tuo: {
+    name: '躺平水豚型', color: '#3B6BFF', tint: '#E8EEFF',
+    tag: '需求我来提，剩下的交给它，我先稳稳坐着',
+    quote: '我只负责说想要什么，剩下的，水豚不操心。',
+    says: ['“行，就按它说的来。”', '“这个让 AI 搞，我去喝水。”', '“应该没问题吧。”'],
+    friend: { id: 'jian', why: '它帮你把关，你继续安心躺平。' },
+    foe: { id: 'huai', why: '你说“交给它”，对方说“我再查查”，谁也说服不了谁，但很有看点。' },
+    target: { R: 80, V: 25, C: 25, E: 55, L: 30, H: 40 },
+    index: { d: 'R', label: '放手指数', ex: '越高，越敢把事交给 AI', f: s => s.R },
+    trait: '你敢把整件事交出去，松弛又高效。',
+    desc: '你对 AI 像对一位靠谱的合伙人：说清目标就放手，不抠细节，也不盯过程。大多数时候你又快又松弛，把时间留给了更值得的事。',
+    analysis: '躺平水豚型的特点是：高放手、低查证。你的优势是真的敢授权，这很多人做不到。接下来可以给重要的结果加一道小小的“安全阀”。',
+    strengths: ['行动快，不被细节绊住', '敢把模糊的需求直接丢给 AI，启动成本低', '心态轻松，不焦虑'],
+    risks: ['AI 偶尔说错的内容，可能会原样带进成品', '长期交给 AI，自己动手的手感可能会变淡', '出了小状况，不太容易回头找原因'],
+    whisper: '给重要的结果留一道小小的核对，会让你的“躺平”更安心。',
+    scenes: ['数据没有来源，你想着“应该没问题”就先用了', 'AI 回答得越流畅，你越放心', '一份材料几乎没改动就发出去了'],
+    mode: '抽检式放手：继续放手，只对数字、引用和对外发送的内容做最低限度的检查。',
+    tips: ['给自己定三个必查项：数字、引用、会被人追问的结论', '对外发送前，让 AI“列出这段话最可能出错的三处”，只看这三处', '每周挑一件事“自己先写，再让 AI 改”，保持手感']
+  },
+  la: {
+    name: '改稿猫猫型', color: '#9B51F0', tint: '#F2E9FE',
+    tag: '再来一版，这次真的是最后一版（喵）',
+    quote: '不是它不行，是本猫还没想好要什么。',
+    says: ['“再自然一点。”', '“不对，感觉差点意思。”', '“算了，还是第三版吧。”'],
+    friend: { id: 'tun', why: '它囤的模板，正好帮你把“要什么”说清楚。' },
+    foe: { id: 'jian', why: '你想再磨一版，它想先核对一遍，谁都不肯松手。' },
+    target: { R: 65, V: 45, C: 60, E: 40, L: 80, H: 30 },
+    index: { d: 'L', label: '打磨指数', ex: '越高，越爱和 AI 反复打磨', f: s => s.L },
+    trait: '你对结果有要求，爱和 AI 一起打磨到满意。',
+    desc: '你心里有一个想要的样子，只是需要在对话里慢慢把它找出来。AI 给一版，你觉得“差一点”，于是再来一轮——你们像一对默契的搭档，一起把作品磨得更漂亮。',
+    analysis: '改稿猫猫型的特点是：高打磨。“要什么”常常是看到结果之后才想清楚的，这是很自然的创作过程。可以试试让它更省力。',
+    strengths: ['有标准，不会被“凑合的结果”打发', '愿意迭代，常能磨出比一次生成更好的东西', '对质量很敏感'],
+    risks: ['“再改一点”容易越改越长，时间不知不觉就过去了', '反馈偏感觉（“再自然点”）时，AI 不容易抓到重点', '对话太长，AI 可能会忘掉前面的要求'],
+    whisper: '很多时候不是 AI 没听懂，而是答案还在你心里慢慢成形。',
+    scenes: ['同一个文案改了二十轮，最后还是选了第三版', '说“再自然一点”，一时说不出自然是什么样', '对话太长，AI 开始忘事，只好重新讲一遍'],
+    mode: '先定标准，再开工：开聊前用三句话写清“要什么、给谁看、什么算完成”。',
+    tips: ['设一个轮数上限（比如五轮），到点就拿稿子自己收尾', '反馈时给具体例子，而不是形容词：“像这句那样”比“更自然”有效', '对话太长时，让 AI 总结当前共识，再开新对话继续']
+  },
+  tun: {
+    name: '囤囤鼠鼠型', color: '#F08A00', tint: '#FFF1DB',
+    tag: '收藏即学会，已学会三百个',
+    quote: '收藏夹里的鼠鼠，已经精通 AI 了。',
+    says: ['“先存着，回头看。”', '“这个提示词绝了，收藏！”', '“我先整理一下提示词库。”'],
+    friend: { id: 'la', why: '你有模板，它有需求，凑成一对刚刚好。' },
+    foe: { id: 'tan', why: '你刚存完十个工具，它又发现了第十一个。' },
+    target: { R: 45, V: 40, C: 35, E: 60, L: 40, H: 80 },
+    index: { d: 'H', label: '囤货指数', ex: '越高，收藏的方法越多', f: s => s.H },
+    trait: '你囤的技巧和工具比用掉的还多，像过冬前的小仓鼠。',
+    desc: '你对“更好的用法”有天然的嗅觉，看到好提示词、好教程就忍不住收藏。收藏夹里囤满了秘籍，用上的没几个，可你从不后悔——因为“以后一定用得上”。',
+    analysis: '囤囤鼠鼠型的特点是：高囤货。收集让你有“我在进步”的踏实感，也让你见多识广。从“收藏”走到“掌握”，只差真正用一次。',
+    strengths: ['信息嗅觉灵敏，知道有哪些可能', '方法储备多，遇到合适场景能很快调用', '爱学习，对 AI 一直保持好奇'],
+    risks: ['存得越多，越容易觉得“还有好多没学”', '还没形成一套真正顺手的固定用法', '找工具的时间，有时比解决问题的时间还长'],
+    whisper: '你缺的不是更好的方法，可能只是把一个方法用满十次。',
+    scenes: ['收藏了十个“万能提示词”，每次还是现想一个', '新教程只看了开头，已经存进文件夹', '整理了半小时提示词库，今天的正事还没动'],
+    mode: '少而用透：只留三个最常用的模板，每个用透再换。',
+    tips: ['定一条规则：收藏后 48 小时内真用一次，没用就清掉', '把收藏夹精简到“三个常用模板”，其余先放着', '每次用完，按真实效果改进模板，而不是再存一个新的']
+  },
+  tan: {
+    name: '尝鲜狗狗型', color: '#12A98E', tint: '#E1F6F1',
+    tag: '新功能出了？我先冲，替你踩坑',
+    quote: '它能干嘛？不知道，先试了再说！',
+    says: ['“诶，这个新功能我试过了。”', '“我换了个工具，你看这个！”', '“等一下，我再试个新玩法。”'],
+    friend: { id: 'huai', why: '你负责冲，它负责验货。' },
+    foe: { id: 'tun', why: '你一路狂奔，它在后面一边收藏一边追。' },
+    target: { R: 40, V: 50, C: 40, E: 80, L: 50, H: 50 },
+    index: { d: 'E', label: '尝鲜指数', ex: '越高，越爱试新工具', f: s => s.E },
+    trait: '哪里有新工具，哪里就有你摇着尾巴冲过去的身影。',
+    desc: '别人还在问“AI 能干嘛”，你已经试了七八种用法，还换了两个工具。你不满足于“够用”，更想知道“还能怎样”。这让你总是走在朋友前面，也有一点点停不下来。',
+    analysis: '尝鲜狗狗型的特点是：高尝鲜，其余比较均衡。你的优势是适应力和想象力，新东西出现时一点都不慌。可以留意“探索”和“产出”的比例。',
+    strengths: ['适应新工具快，不容易被落下', '总能想到别人想不到的用法', '愿意分享和试错，常常是身边人的“AI 启蒙者”'],
+    risks: ['工具换得勤，每个都还没来得及用到顺手', '玩得开心的时候，容易忘了看有没有做出成果', '新鲜感过去后，项目可能停在半路'],
+    whisper: '你很清楚它能做什么，下一步可以想想“我最常做的那件事”怎么做到最好。',
+    scenes: ['周末上线新功能，周一就开始给朋友演示', '同一个任务用三个 AI 各做一遍，只为对比', '一个有趣的实验做到一半，被下一个新玩法吸走了'],
+    mode: '探索加落地：每周留固定时间玩，其余时间只用已验证的一两套流程。',
+    tips: ['给探索设个时间盒：每周一小时，到点收工', '每试一个新东西，问自己一句“它能替换我现在的哪个工作环节”', '把试出来的最佳用法，记成一份给自己的短清单']
+  },
+  huai: {
+    name: '观望龟龟型', color: '#5E6A8D', tint: '#E9ECF4',
+    tag: '你先说，我先缩壳观察一下',
+    quote: '我不是不用，是龟龟还没被说服。',
+    says: ['“我再看看。”', '“它说的我先打个问号。”', '“我自己来吧，更稳。”'],
+    friend: { id: 'tan', why: '它替你探路，你替它把关。' },
+    foe: { id: 'tuo', why: '你们对“要不要交给 AI”的答案永远相反，但互相很有看点。' },
+    target: { R: 8, V: 72, C: 68, E: 15, L: 25, H: 20 },
+    index: { d: 'R', label: '自己动手指数', ex: '越高，越习惯自己把关', f: s => 100 - s.R },
+    trait: '你和 AI 保持舒服的距离，重要的事习惯自己把关。',
+    desc: '你不排斥 AI，也见过它出错的样子。你更相信自己的判断，也更相信搜出来、查出来、算出来的东西。于是你用得不多，用得克制。这份稳让你很少踩坑，只是有时会多走一些本可以少走的路。',
+    analysis: '观望龟龟型的特点是：低放手、高查证、低尝鲜。你的谨慎是真实的优势，尤其在要对结果负责的时候。值得想一想：这份谨慎，来自你的真实使用经验，还是来自“万一出错”的预设？',
+    strengths: ['独立判断力强，不容易被“流畅但不一定对”的话说服', '对信息质量要求高', 'AI 出错时不慌，能很快发现'],
+    risks: ['可能错过 AI 在重复性工作上能省下的时间', '因为用得少，还没积累“哪些场景它靠谱”的经验', '偶尔一次出错，就容易对整体打折扣'],
+    whisper: '你的谨慎很宝贵，也许可以先从“出错也没关系”的小事开始交给它。',
+    scenes: ['有问题先搜索，AI 只是备选', 'AI 答错一次，你对它的信任整体下降', '别人都在用，你觉得再看看也不迟'],
+    mode: '先从小事试用：只在“出错也没关系”的事上用，比如整理、改格式、头脑风暴。',
+    tips: ['挑三件“出错也没关系”的事交给 AI，慢慢积累自己的“靠谱场景清单”', '让 AI 做初稿而不是定稿，你的判断力正好用在审稿上', '记录它错在哪一类，而不是笼统地觉得“不靠谱”']
+  }
+};
+
+/* ---------- 评分 ---------- */
+function dimRanges() {
+  const r = {};
+  DIM_KEYS.forEach(d => {
+    let mn = 0, mx = 0;
+    QUESTIONS.forEach(q => {
+      const vals = q.o.map(o => o.v[d] || 0);
+      mn += Math.min(...vals); mx += Math.max(...vals);
+    });
+    r[d] = { mn, mx };
+  });
+  return r;
+}
+const RANGES = dimRanges();
+
+/* answers: 每题选中的“原始选项下标”数组；未答题不计分。
+   得分按“随机作答基线”标准化：均值 50，±2.5 个标准差对应 0/100，
+   这样每个维度的 50 分都代表“和随机选差不多”，不同维度之间可比。 */
+function baseline(d, answered) {
+  let mean = 0, varr = 0;
+  QUESTIONS.forEach((q, i) => {
+    if (!answered[i]) return;
+    const vals = q.o.map(o => o.v[d] || 0);
+    const mu = vals.reduce((a, b) => a + b, 0) / vals.length;
+    mean += mu;
+    varr += vals.reduce((a, b) => a + (b - mu) ** 2, 0) / vals.length;
+  });
+  return { mean, sd: Math.sqrt(varr) };
+}
+function scoreAnswers(answers) {
+  const answered = QUESTIONS.map((_, i) => answers[i] !== null && answers[i] !== undefined);
+  const s = {};
+  DIM_KEYS.forEach(d => {
+    let raw = 0;
+    QUESTIONS.forEach((q, i) => { if (answered[i]) raw += q.o[answers[i]].v[d] || 0; });
+    const b = baseline(d, answered);
+    s[d] = b.sd === 0 ? 50 : Math.max(0, Math.min(100, Math.round(50 + 20 * (raw - b.mean) / b.sd)));
+  });
+  return s;
+}
+function classify(s) {
+  const list = Object.keys(PERSONAS).map(id => {
+    const t = PERSONAS[id].target;
+    const d = Math.sqrt(DIM_KEYS.reduce((a, k) => a + (s[k] - t[k]) ** 2, 0));
+    return { id, d };
+  }).sort((a, b) => a.d - b.d);
+  return { main: list[0].id, second: list[1].id, ranking: list };
+}
+
+/* 六只动物的大头萌插画（内联 SVG，无外部图片依赖） */
+const INK = '#1D2040';
+const ART_FACE = {
+  eyes: (x1, x2, y, r) => [x1, x2].map(x => `<circle cx="${x}" cy="${y}" r="${r}" fill="${INK}" stroke="none"/><circle cx="${x - r * .35}" cy="${y - r * .4}" r="${r * .38}" fill="#fff" stroke="none"/>`).join(''),
+  cheeks: (x1, x2, y) => [x1, x2].map(x => `<ellipse cx="${x}" cy="${y}" rx="13" ry="8" fill="#FF9DB5" opacity=".75" stroke="none"/>`).join('')
+};
+const ART = {
+  jian: `<path d="M88 46 Q90 20 102 34 Q112 18 118 48" fill="#fff"/>
+    <circle cx="100" cy="114" r="72" fill="#fff"/>
+    ${ART_FACE.cheeks(58, 142, 134)}
+    ${ART_FACE.eyes(74, 126, 106, 8)}
+    <path d="M56 86 L90 98 M144 86 L110 98" fill="none"/>
+    <path d="M70 130 Q100 112 130 130 Q126 158 100 158 Q74 158 70 130Z" fill="#FFA62B"/>
+    <path d="M82 138 Q100 146 118 138" fill="none" stroke-width="3.5"/>`,
+  tuo: `<circle cx="54" cy="58" r="15" fill="#B88555"/><circle cx="146" cy="58" r="15" fill="#B88555"/>
+    <ellipse cx="100" cy="116" rx="80" ry="66" fill="#CF9F6F"/>
+    <path d="M100 52 q-12 -6 0 -14 q12 8 0 14" fill="#4FB36A" stroke-width="3.5"/><circle cx="100" cy="48" r="15" fill="#FFB02E"/><path d="M100 34 q8 -10 18 -8 q-4 10 -18 8" fill="#4FB36A" stroke-width="3.5"/>
+    ${ART_FACE.cheeks(52, 148, 122)}
+    <path d="M62 104 Q73 114 84 104 M116 104 Q127 114 138 104" fill="none"/>
+    <ellipse cx="100" cy="136" rx="40" ry="26" fill="#B98456"/>
+    <circle cx="88" cy="130" r="4" fill="${INK}" stroke="none"/><circle cx="112" cy="130" r="4" fill="${INK}" stroke="none"/>
+    <path d="M90 144 Q100 152 110 144" fill="none" stroke-width="3.5"/>`,
+  la: `<path d="M38 84 L46 26 L90 58Z" fill="#FFB35C"/><path d="M162 84 L154 26 L110 58Z" fill="#FFB35C"/>
+    <path d="M52 66 L54 44 L72 58Z M148 66 L146 44 L128 58Z" fill="#FF9DB5" stroke="none"/>
+    <ellipse cx="100" cy="118" rx="78" ry="64" fill="#FFB35C"/>
+    <path d="M100 56 v16 M82 60 l4 12 M118 60 l-4 12" fill="none" stroke="#D9822B" stroke-width="4.5"/>
+    <ellipse cx="100" cy="142" rx="30" ry="20" fill="#FFF" stroke="none"/>
+    ${ART_FACE.cheeks(50, 150, 132)}
+    ${ART_FACE.eyes(70, 130, 112, 10)}
+    <path d="M93 128 h14 l-7 8z" fill="#FF6F8A" stroke-width="3.5"/>
+    <path d="M100 136 q-7 12 -17 5 M100 136 q7 12 17 5" fill="none" stroke-width="3.5"/>
+    <path d="M30 124 L62 130 M30 142 L62 138 M170 124 L138 130 M170 142 L138 138" fill="none" stroke-width="3"/>`,
+  tun: `<circle cx="52" cy="62" r="26" fill="#D8BFAA"/><circle cx="148" cy="62" r="26" fill="#D8BFAA"/>
+    <circle cx="52" cy="62" r="13" fill="#FF9DB5" stroke="none"/><circle cx="148" cy="62" r="13" fill="#FF9DB5" stroke="none"/>
+    <ellipse cx="100" cy="118" rx="80" ry="64" fill="#EAD9C8"/>
+    <ellipse cx="100" cy="138" rx="52" ry="34" fill="#FFF6EE" stroke="none"/>
+    ${ART_FACE.cheeks(48, 152, 130)}
+    ${ART_FACE.eyes(72, 128, 108, 8.5)}
+    <ellipse cx="100" cy="124" rx="8" ry="6" fill="#FF6F8A" stroke-width="3"/>
+    <path d="M100 130 v6 M100 136 q-10 8 -18 0 M100 136 q10 8 18 0" fill="none" stroke-width="3.5"/>
+    <rect x="93" y="139" width="14" height="13" rx="3" fill="#fff" stroke-width="3"/>`,
+  tan: `<path d="M38 92 L46 32 L90 64Z" fill="#E8A24E"/><path d="M162 92 L154 32 L110 64Z" fill="#E8A24E"/>
+    <path d="M54 72 L56 50 L74 62Z M146 72 L144 50 L126 62Z" fill="#FFE3C2" stroke="none"/>
+    <ellipse cx="100" cy="118" rx="78" ry="64" fill="#F2B26B"/>
+    <ellipse cx="100" cy="142" rx="54" ry="34" fill="#FFF" stroke="none"/>
+    <circle cx="72" cy="90" r="5" fill="#FFF4E0" stroke="none"/><circle cx="128" cy="90" r="5" fill="#FFF4E0" stroke="none"/>
+    ${ART_FACE.cheeks(46, 154, 134)}
+    ${ART_FACE.eyes(74, 126, 112, 9.5)}
+    <ellipse cx="100" cy="128" rx="11" ry="8" fill="${INK}" stroke-width="3"/>
+    <path d="M100 136 v6 M100 142 q-12 10 -22 0 M100 142 q12 10 22 0" fill="none" stroke-width="3.5"/>
+    <path d="M92 147 q8 20 16 0z" fill="#FF6F8A" stroke-width="3.5"/>`,
+  huai: `<ellipse cx="100" cy="156" rx="84" ry="38" fill="#4FA06A"/>
+    <path d="M56 150 q12 -14 26 0 M118 150 q12 -14 26 0 M88 168 q12 -14 24 0" fill="none" stroke="#2F7A4B" stroke-width="4"/>
+    <circle cx="100" cy="104" r="62" fill="#9BDBA9"/>
+    ${ART_FACE.cheeks(54, 146, 124)}
+    <circle cx="76" cy="110" r="7" fill="${INK}" stroke="none"/><circle cx="124" cy="110" r="7" fill="${INK}" stroke="none"/>
+    <path d="M62 104 H90 M110 104 H138" fill="none" stroke-width="6"/>
+    <path d="M86 130 Q100 142 114 130" fill="none"/>`
+};
+function art(id, size) {
+  const s = size ? ` width="${size}" height="${size}"` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"${s} role="img" aria-hidden="true"><g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">${ART[id]}</g></svg>`;
+}
+
+/* ===== 配置 ===== */
+const CONFIG = {
+  TRACK_URL: '',            // 以后填 Cloudflare Worker / 任意接收 POST 的地址；留空则只存本地
+  DEBUG: /[?&]debug=1/.test(location.search)
+};
+const KEY = 'aiper_v1', KEY_EVENTS = 'aiper_events_v1', KEY_AID = 'aiper_aid';
+const $app = document.getElementById('app');
+
+/* ===== 存储（localStorage 不可用时退化为内存） ===== */
+const mem = {};
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return mem[k] || null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } }
+};
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+/* ===== 埋点 ===== */
+const params = new URLSearchParams(location.search);
+let aid = store.get(KEY_AID); if (!aid) { aid = uid(); store.set(KEY_AID, aid); }
+const src = params.get('src') || params.get('utm_source') || store.get('aiper_src') || 'direct';
+store.set('aiper_src', src);
+function loadEvents() { try { return JSON.parse(store.get(KEY_EVENTS) || '[]'); } catch (e) { return []; } }
+function track(name, props) {
+  const ev = Object.assign({ t: Date.now(), name, aid, sid: state && state.sid, src }, props || {});
+  const list = loadEvents(); list.push(ev); store.set(KEY_EVENTS, JSON.stringify(list.slice(-600)));
+  if (CONFIG.TRACK_URL) {
+    try {
+      const body = JSON.stringify(ev);
+      if (navigator.sendBeacon) navigator.sendBeacon(CONFIG.TRACK_URL, body);
+      else fetch(CONFIG.TRACK_URL, { method: 'POST', body, keepalive: true });
+    } catch (e) {}
+  }
+}
+
+/* ===== 状态 ===== */
+const N = QUESTIONS.length;
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function makeOrder(sid) {
+  let seed = 0; for (const c of sid) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+  const r = mulberry(seed);
+  return QUESTIONS.map(q => {
+    const a = q.o.map((_, i) => i);
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  });
+}
+function fresh() {
+  const sid = uid();
+  return { sid, stage: 'landing', cur: 0, answers: Array(N).fill(null), order: makeOrder(sid), startedAt: 0, result: null, fb: null };
+}
+let state = null;
+function loadState() {
+  try {
+    const s = JSON.parse(store.get(KEY) || 'null');
+    if (s && Array.isArray(s.answers) && s.answers.length === N && Array.isArray(s.order) && s.order.length === N) return s;
+  } catch (e) {}
+  return fresh();
+}
+function save() { store.set(KEY, JSON.stringify(state)); }
+state = loadState();
+
+/* ===== 工具 ===== */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const IN_APP = /MicroMessenger|miniProgram|xhsdiscover|XiaoHongShu|Weibo|AlipayClient|DingTalk|QQ\//i.test(navigator.userAgent);
+const DISCLAIMER = '本测试仅用于娱乐和自我觉察，不构成心理诊断、医学判断或行为预测依据。';
+function setAccent(p) { document.documentElement.style.setProperty('--ac', p.color); document.documentElement.style.setProperty('--tint', p.tint); }
+function resetAccent() { document.documentElement.style.setProperty('--ac', '#7A5CFF'); document.documentElement.style.setProperty('--tint', '#EDE7FF'); }
+function confetti() {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const wrap = document.createElement('div'); wrap.className = 'confetti'; wrap.setAttribute('aria-hidden', 'true');
+  const cols = ['#FFE14D', '#FF9DB5', '#7A5CFF', '#4FD1B5', '#FF8A3D'];
+  for (let i = 0; i < 26; i++) { const e = document.createElement('i'); e.style.cssText = `left:${Math.random() * 100}%;background:${cols[i % 5]};animation-delay:${Math.random() * .5}s;animation-duration:${1.6 + Math.random() * 1.2}s;border-radius:${i % 3 ? '3px' : '50%'}`; wrap.appendChild(e); }
+  document.body.appendChild(wrap); setTimeout(() => wrap.remove(), 3200);
+}
+function go(stage) { state.stage = stage; save(); render(); window.scrollTo(0, 0); }
+
+/* ===== 视图 ===== */
+const SHORT = { jian: '鹅鹅', tuo: '水豚', la: '猫猫', tun: '鼠鼠', tan: '狗狗', huai: '龟龟' };
+const IDS = ['jian', 'tuo', 'la', 'tun', 'tan', 'huai'];
+function viewLanding() {
+  resetAccent();
+  return `<div class="hero">
+    <h1>我用 AI<br>用成了鼠鼠。。。</h1>
+    <div class="zoo" aria-label="六种动物结果">${IDS.map((id, i) => `<div class="pet" style="background:${PERSONAS[id].tint};animation-delay:${i * .25}s">${art(id)}${SHORT[id]}</div>`).join('')}</div>
+    <p class="sub">${N} 道小题，看看你和 AI 是哪种相处方式 ✨</p>
+    <div class="meta"><span>约 4 分钟</span><span>测完直接出结果</span><span>可生成动物卡片</span></div>
+    <div><button class="btn" data-act="start">测测我是哪只</button><p class="small disc">${DISCLAIMER}</p></div>
+  </div>`;
+}
+function viewQuiz() {
+  resetAccent();
+  const i = state.cur, q = QUESTIONS[i];
+  const opts = state.order[i].map(oi => `<button class="opt${state.answers[i] === oi ? ' on' : ''}" data-act="pick" data-oi="${oi}">${esc(q.o[oi].txt)}</button>`).join('');
+  return `<div class="top"><button class="back" data-act="back" ${i === 0 ? 'disabled' : ''} aria-label="上一题">上一题</button><span aria-live="polite">${i + 1} / ${N}</span></div>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${N}" aria-valuenow="${i + 1}"><i style="width:${(i + 1) / N * 100}%"></i><span class="walker" style="left:${(i + 1) / N * 100}%">${art(IDS[i % 6])}</span></div>
+    <div class="q"><div class="ask"><div class="avatar" style="background:${PERSONAS[IDS[i % 6]].tint}">${art(IDS[i % 6])}</div><div class="bub ai">${esc(q.t)}</div></div><div class="opts">${opts}</div></div>`;
+}
+function head(p, r) {
+  return `<div class="badge">你和 AI 的相处方式是……</div>
+    <div class="pic">${art(r.main)}<i class="st s1"></i><i class="st s2"></i><i class="st s3"></i></div>
+    <h1 class="pname">${esc(p.name)}</h1>
+    <p class="tag">${esc(p.tag)}</p>
+    <p class="note">没有好坏之分，每种动物都有自己厉害的地方 🐾</p>`;
+}
+function dimText(d, v) { const t = DIMS[d]; return v >= 58 ? t.hiT : v <= 42 ? t.loT : t.midT; }
+function viewResult() {
+  const r = state.result, p = PERSONAS[r.main], p2 = PERSONAS[r.second], s = r.scores; setAccent(p);
+  const iv = p.index.f(s);
+  const dimRows = DIM_KEYS.map(d => `<div class="drow"><div class="dtop"><b>${DIMS[d].name}</b><span class="dex">${DIMS[d].ex}</span><em>${s[d]}</em></div>
+      <div class="meter"><i style="width:${s[d]}%"></i></div><div class="ends"><span>${DIMS[d].lo}</span><span>${DIMS[d].hi}</span></div></div>`).join('');
+  const picks = DIM_KEYS.slice().sort((a, b) => Math.abs(s[b] - 50) - Math.abs(s[a] - 50)).slice(0, 2);
+  const fb = state.fb;
+  return `<div class="res">${head(p, r)}
+    <div class="sec card hl"><h3>一句话读懂你</h3><p class="trait">${esc(p.trait)}</p><p class="desc">${esc(p.desc)}</p>
+      <div class="idxrow"><b>${iv}</b><div><div class="idxname">${esc(p.index.label)}</div><div class="small">${esc(p.index.ex)}（满分 100）</div></div></div>
+      <div class="meter"><i style="width:${iv}%"></i></div></div>
+    <button class="btn mark" data-act="share">生成我的动物卡片，发给搭子</button>
+    <div class="sec card good"><h3>你的超能力</h3><ul>${p.strengths.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+    <div class="sec card tip"><h3>小小提醒</h3><ul>${p.risks.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="whisper">悄悄话：${esc(p.whisper)}</p></div>
+    <div class="sec card"><h3>适合你的相处方式</h3><p><b>${esc(p.mode)}</b></p><ul>${p.tips.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+    <div class="sec card"><h3>你的六项数据</h3><p class="small" style="margin-top:-4px">每一项都是“你更靠近哪一端”，没有高低好坏。50 分约等于随便选的水平，越偏离，倾向越鲜明。</p>${dimRows}
+      <p class="hint"><b>你最突出的两项：</b></p>${picks.map(d => `<p><b>${DIMS[d].name} ${s[d]}</b>　${esc(dimText(d, s[d]))}</p>`).join('')}</div>
+    <div class="divider"><span>彩蛋区</span></div>
+    <div class="sec card"><h3>你的嘴替语录</h3><div class="thread">${p.says.map(x => `<div class="bub me" style="max-width:100%">${esc(x)}</div>`).join('')}</div></div>
+    <div class="sec card"><h3>对号入座</h3><ul>${p.scenes.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+    <div class="sec card"><h3>动物搭子关系</h3><div class="pair"><div class="pa">${art(p.friend.id)}</div><p><b>最合拍：${esc(PERSONAS[p.friend.id].name)}</b><br>${esc(p.friend.why)}</p></div>
+      <div class="pair"><div class="pa">${art(p.foe.id)}</div><p><b>欢喜冤家：${esc(PERSONAS[p.foe.id].name)}</b><br>${esc(p.foe.why)}</p></div><p class="small">纯属娱乐，别拿去给同事贴标签。</p></div>
+    <div class="sec card"><h3>你的隐藏副人格</h3><div class="pair"><div class="pa">${art(r.second)}</div><p><b>${esc(p2.name)}</b><br>${esc(p2.trait)}</p></div><p class="small">主、副人格越接近，说明你在不同场景下的用法越灵活。</p></div>
+    <div class="sec card"><h3>说中了吗？</h3>
+      <div class="poll" role="group">${['被说中了', '有点像', '不像'].map(t => `<button data-act="fit" data-v="${t}" class="${fb && fb.fit === t ? 'on' : ''}">${t}</button>`).join('')}</div>
+      <textarea id="fbtext" placeholder="哪里像、哪里不像？写一句就行（选填）">${fb && fb.text ? esc(fb.text) : ''}</textarea>
+      <p class="small" id="fbhint" style="color:#C0392B;display:none">先选一个：被说中了 / 有点像 / 不像</p>
+      <button class="btn" data-act="fbsend" ${fb && fb.sent ? 'disabled' : ''}>${fb && fb.sent ? '已收到，谢谢你' : '提交反馈'}</button></div>
+    <button class="btn ghost" data-act="retake">再测一次，看会不会变身</button>
+    <p class="small" style="text-align:center">${DISCLAIMER}</p></div>`;
+}
+
+function render() {
+  const st = state.stage;
+  $app.innerHTML = st === 'quiz' ? viewQuiz() : st === 'result' ? viewResult() : viewLanding();
+  if (CONFIG.DEBUG) { const b = document.createElement('button'); b.className = 'dbg'; b.dataset.act = 'debug'; b.textContent = 'debug'; $app.appendChild(b); }
+}
+
+/* ===== 流程 ===== */
+let busy = false;
+function start() {
+  const keepSrc = state;
+  state = fresh(); state.stage = 'quiz'; state.startedAt = Date.now(); save();
+  track('test_start'); render(); window.scrollTo(0, 0);
+}
+function pick(oi) {
+  if (busy) return; busy = true;
+  const i = state.cur; state.answers[i] = oi; save();
+  document.querySelectorAll('.opt').forEach(b => b.classList.toggle('on', +b.dataset.oi === oi));
+  track('q_answered', { q: i });
+  setTimeout(() => {
+    if (state.stage !== 'quiz') { busy = false; return; }
+    if (i >= N - 1) finish(); else { state.cur = i + 1; save(); render(); window.scrollTo(0, 0); }
+    busy = false;
+  }, 120);
+}
+function back() { if (busy || state.cur === 0) return; state.cur--; save(); render(); }
+function finish() {
+  const miss = state.answers.findIndex(a => a === null);
+  if (miss !== -1) { state.cur = miss; save(); render(); return; }
+  const scores = scoreAnswers(state.answers), c = classify(scores);
+  state.result = { scores, main: c.main, second: c.second };
+  track('test_complete', { persona: c.main, second: c.second, sec: Math.round((Date.now() - state.startedAt) / 1000) });
+  go('result'); track('result_view', { persona: c.main }); confetti();
+}
+
+/* ===== 弹层 ===== */
+function sheet(html) {
+  closeSheet();
+  const m = document.createElement('div'); m.className = 'mask'; m.id = 'mask';
+  m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  m.addEventListener('click', e => { if (e.target === m) closeSheet(); });
+  document.body.appendChild(m);
+}
+function closeSheet() { const m = document.getElementById('mask'); if (m) m.remove(); }
+
+/* ===== 结果卡片 ===== */
+function wrapText(ctx, text, maxW) {
+  const lines = []; let line = '';
+  for (const ch of text) { if (ctx.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch; } else line += ch; }
+  if (line) lines.push(line); return lines;
+}
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function loadSvgImage(svg) {
+  return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+}
+async function drawCard() {
+  const r = state.result, p = PERSONAS[r.main], s = r.scores;
+  const W = 750, H = 1280, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  const sans = '"PingFang SC","Noto Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif';
+  const serif = '"Songti SC","Noto Serif SC","Noto Serif CJK SC",serif';
+  const INKC = '#1D2040';
+  c.fillStyle = p.tint; c.fillRect(0, 0, W, H);
+  // 圆点背景
+  c.fillStyle = 'rgba(29,32,64,.06)'; for (let x = 20; x < W; x += 38) for (let y = 20; y < H; y += 38) { c.beginPath(); c.arc(x, y, 3, 0, 7); c.fill(); }
+  // 贴纸卡片
+  c.fillStyle = INKC; rr(c, 44, 52, W - 88, H - 88, 48); c.fill();
+  c.fillStyle = '#fff'; rr(c, 40, 40, W - 88, H - 88, 48); c.fill(); c.lineWidth = 6; c.strokeStyle = INKC; c.stroke();
+  c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  c.fillStyle = '#5F6385'; c.font = `800 30px ${sans}`; c.fillText('我和 AI 的相处方式是……', W / 2 - 4, 120);
+  // 大头图
+  const cx = W / 2 - 4, cy = 340, R = 168;
+  c.fillStyle = INKC; c.beginPath(); c.arc(cx + 2, cy + 8, R, 0, 7); c.fill();
+  c.fillStyle = p.tint; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fill(); c.lineWidth = 6; c.strokeStyle = INKC; c.stroke();
+  const im = await loadSvgImage(art(r.main, 400));
+  if (im) c.drawImage(im, cx - 150, cy - 150, 300, 300);
+  // 名字
+  let fs = 88; c.font = `900 ${fs}px ${sans}`;
+  while (c.measureText(p.name).width > W - 200 && fs > 50) { fs -= 4; c.font = `900 ${fs}px ${sans}`; }
+  c.fillStyle = p.color; c.fillText(p.name, cx + 4, 600 + 4); c.fillStyle = INKC; c.fillText(p.name, cx, 600);
+  c.font = `800 32px ${sans}`; c.fillText(p.tag, cx, 660);
+  // 金句气泡
+  c.font = `700 38px ${serif}`; const lines = wrapText(c, p.quote, W - 200 - 56);
+  const bh = lines.length * 58 + 52, bx = 92, by = 704, bw = W - 184 - 8;
+  c.fillStyle = INKC; rr(c, bx + 3, by + 6, bw, bh, 34); c.fill();
+  c.fillStyle = p.tint; rr(c, bx, by, bw, bh, 34); c.fill(); c.lineWidth = 5; c.strokeStyle = INKC; c.stroke();
+  c.fillStyle = INKC; c.textAlign = 'left'; lines.forEach((l, i) => c.fillText(l, bx + 28, by + 26 + 40 + i * 58));
+    // 指数
+  const v = p.index.f(s), y0 = by + bh + 40;
+  c.fillStyle = INKC; c.font = `900 108px ${sans}`; c.fillText(String(v), 100, y0 + 86);
+  const vw = c.measureText(String(v)).width; c.fillStyle = '#5F6385'; c.font = `800 32px ${sans}`; c.fillText(p.index.label, 100 + vw + 20, y0 + 86);
+  // 维度条（两条）
+  const top = DIM_KEYS.filter(k => k !== p.index.d).sort((a, b) => Math.abs(s[b] - 50) - Math.abs(s[a] - 50)).slice(0, 2);
+  top.forEach((d, i) => {
+    const y = y0 + 150 + i * 58;
+    c.fillStyle = INKC; c.font = `800 28px ${sans}`; c.fillText(DIMS[d].name, 100, y);
+    c.fillStyle = '#fff'; rr(c, 240, y - 24, 330, 20, 10); c.fill(); c.lineWidth = 3; c.stroke();
+    c.fillStyle = p.color; rr(c, 240, y - 24, Math.max(20, 330 * s[d] / 100), 20, 10); c.fill(); c.stroke();
+    c.fillStyle = INKC; c.font = `900 28px ${sans}`; c.textAlign = 'right'; c.fillText(String(s[d]), W - 100, y); c.textAlign = 'left';
+  });
+  c.textAlign = 'center'; c.fillStyle = '#8A8FAA'; c.font = `600 23px ${sans}`; c.fillText('你是哪只？测测你的 AI 使用人格 · 仅供娱乐', W / 2 - 4, H - 76);
+  return cv.toDataURL('image/png');
+}
+async function openShare() {
+  const url = await drawCard(); track('share_card_generate', { persona: state.result.main });
+  sheet(`<h3>动物卡片</h3><img src="${url}" alt="你的 AI 使用人格结果卡片"><p class="small">长按图片 → 保存到相册，然后发给搭子～</p>
+    ${IN_APP ? '' : `<a class="btn" download="我的AI使用人格.png" href="${url}" data-act="dl">保存图片</a>`}<button class="btn ghost" data-act="close">关闭</button>`);
+}
+
+/* ===== 事件 ===== */
+$app.addEventListener('click', handle); document.body.addEventListener('click', e => { if (e.target.closest('#mask')) handle(e); });
+function handle(e) {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act;
+  if (a === 'start') start();
+  else if (a === 'pick') pick(+el.dataset.oi);
+  else if (a === 'back') back();
+  else if (a === 'share') openShare();
+  else if (a === 'close') closeSheet();
+  else if (a === 'retake') { track('retake'); closeSheet(); start(); }
+  else if (a === 'fit') { state.fb = Object.assign({}, state.fb, { fit: el.dataset.v }); save(); document.querySelectorAll('.poll button').forEach(b => b.classList.toggle('on', b === el)); }
+  else if (a === 'fbsend') {
+    const t = (document.getElementById('fbtext') || {}).value || '';
+    if (!state.fb || !state.fb.fit) { const h = document.getElementById('fbhint'); if (h) h.style.display = 'block'; return; }
+    state.fb = Object.assign({}, state.fb, { text: t.slice(0, 300), sent: true }); save();
+    track('feedback_submit', { persona: state.result.main, fit: state.fb.fit, text: state.fb.text });
+    el.disabled = true; el.textContent = '已收到，谢谢你';
+  }
+  else if (a === 'debug') openDebug();
+}
+function openDebug() {
+  const ev = loadEvents(), cnt = {}; ev.forEach(x => cnt[x.name] = (cnt[x.name] || 0) + 1);
+  sheet(`<h3>埋点（本机）</h3><pre class="log">${esc(JSON.stringify(cnt, null, 1))}</pre><pre class="log">${esc(JSON.stringify(ev.slice(-30)))}</pre><button class="btn ghost" data-act="close">关闭</button>`);
+}
+
+/* ===== 启动 ===== */
+if (['calc', 'free', 'full'].includes(state.stage)) state.stage = state.result ? 'result' : 'landing';
+if (state.stage === 'quiz' && state.answers.every(a => a !== null)) { try { finish(); } catch (e) { state = fresh(); } }
+if (state.stage === 'result' && !state.result) state = fresh();
+render();
+track('page_view', { stage: state.stage });
+window.__aiper = { get state() { return state; }, events: loadEvents, QUESTIONS, scoreAnswers, classify };
+
+</script></body></html>
