@@ -139,6 +139,18 @@ pre.log{white-space:pre-wrap;word-break:break-all;font:11px/1.4 monospace;backgr
 .pair .pa svg{width:100%;height:100%;display:block}
 .btn:before{content:"";}
 .opt:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+/* ===== v4：量表式答题 ===== */
+.stmt{font-size:20px!important;font-weight:800;line-height:1.5}
+.qhint{text-align:center;font-size:14px;font-weight:800;color:var(--sub);margin:6px 0 -2px}
+.scale{display:flex;flex-direction:column;gap:10px}
+.lik{display:flex;align-items:center;gap:0;width:100%;background:var(--white);border:2.5px solid var(--ink);box-shadow:var(--shadow);border-radius:20px;padding:11px 16px;font-size:17px;font-weight:800;text-align:left;transition:transform .08s,box-shadow .08s,background .1s}
+.lik .dot{flex:none;display:block;border-radius:50%;background:var(--ink);opacity:.25}
+.lik.l0 .dot{width:10px;height:10px;margin-right:30px}.lik.l1 .dot{width:14px;height:14px;margin-right:26px}.lik.l2 .dot{width:18px;height:18px;margin-right:22px}.lik.l3 .dot{width:23px;height:23px;margin-right:17px}.lik.l4 .dot{width:28px;height:28px;margin-right:12px}
+.lik.l3,.lik.l4{background:#FFF8D6}.lik.l4{background:#FFEFA0}
+.lik.on{background:var(--mark);transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.lik.on .dot{opacity:1;background:var(--pink);border:2.5px solid var(--ink)}
+.lik:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+@media (hover:hover){.lik:hover{background:#FFF1B8}}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -169,198 +181,25 @@ const DIMS = {
        midT: '你会存一些好用的东西，也会真的拿来用，收藏和使用比较平衡。',
        loT: '你很少囤东西，需要时现想现问，轻装上阵。' }
 };
+
+/* 量表式题目：每题一句话，选“符合程度”（0–4）。rev 表示反向计分。每个维度 5 题（4 正 1 反）。 */
+const SCALE = ['非常不符合', '基本不符合', '符合', '非常符合', '非常非常符合'];
+const RAW_ITEMS = {
+  R: [['写周报、写文案，我会先让 AI 出完整初稿'], ['拿不定主意的时候，我会直接听 AI 的'], ['只要结果差不多，我不太纠结 AI 是怎么做的'], ['复杂的任务，我敢整个丢给 AI，自己等结果'], ['重要的事，我更愿意自己从头做', 1]],
+  V: [['AI 给的数据没出处，我会去查一下'], ['AI 说得再流畅，我也会再确认一遍'], ['重要内容我会用搜索或第二个 AI 交叉核对'], ['我习惯追问 AI：“你这个依据是什么？”'], ['AI 说的话，我基本直接用', 1]],
+  C: [['AI 改过的文字，我一定要改回自己的口吻'], ['我会先想好框架和要点，再让 AI 来填'], ['最终成品长什么样，必须由我来定'], ['我会盯着 AI 的每一步，不放心全交给它'], ['细节让 AI 定就行，我不太在意', 1]],
+  E: [['出了新的 AI 工具，我会很快去试试'], ['同一个任务，我常常换几个 AI 对比着用'], ['我喜欢琢磨 AI 的各种新玩法'], ['朋友分享了新用法，我会马上复刻一遍'], ['我有顺手的工具，不太想换', 1]],
+  L: [['同一个内容，我常常和 AI 来回改很多轮'], ['AI 给的第一版，我很少直接满意'], ['我常说“再来一版”“再自然一点”'], ['我喜欢一点点追问，把结果磨到最满意'], ['我习惯一两轮就收工', 1]],
+  H: [['看到好用的提示词，我会马上收藏'], ['我的收藏夹里，存了不少 AI 教程和模板'], ['我常想着“先存着，以后会用上”'], ['我会专门整理自己的提示词库'], ['我基本不收藏，要用时现想现问', 1]]
+};
 const DIM_KEYS = ['R', 'V', 'C', 'E', 'L', 'H'];
-
-/* 选项写法：['选项文字', 'R3 C1'] 表示该选项给托付度+3、掌控欲+1，负数为反向计分 */
-function Q(t, opts) {
-  return { t, o: opts.map(([txt, pts]) => {
-    const v = {}; String(pts).replace(/([RVCELH])(-?\d)/g, (_, d, n) => { v[d] = +n; });
-    return { txt, v };
-  }) };
-}
-
-const QUESTIONS = [
-  Q('周报要交了，你手上只有一堆零散记录。你会：', [
-    ['全部丢给 AI，让它直接出完整成稿', 'R3'],
-    ['先列好三个重点，再让 AI 按重点展开', 'C2 R1'],
-    ['自己写个草稿，让 AI 只负责润色', 'C2 V1 R1'],
-    ['让 AI 给几种写法，挑顺眼的再改', 'E2 R1']]),
-  Q('AI 给了一段很完整的分析，里面有两个数据没写来源。你会：', [
-    ['先用着，有人问再说', 'R3'],
-    ['追问 AI：“这个数据哪来的？”', 'V2 L1 R1'],
-    ['自己去搜一下核对', 'V3 C1'],
-    ['把没把握的删掉，只留我能确认的', 'V2 C1 R-1']]),
-  Q('你让 AI 改一段文案，整体不错，但有一句不像你会说的话。你会：', [
-    ['直接用，差不多就行', 'R3'],
-    ['自己动手把那句改回我的说法', 'C3 R1'],
-    ['告诉它“这句不对”，让它再来一轮', 'L3'],
-    ['让它再出五版，我从里面拼一个', 'E2 L1 C1']]),
-  Q('说到“好用的提示词收藏”，你的情况更接近：', [
-    ['存了一大堆，但很少再打开', 'H3'],
-    ['有几个常用的，隔段时间会整理', 'H2 C1'],
-    ['基本不存，每次现想', 'E1 R1'],
-    ['不存提示词，只存好用的结果', 'H1 R1 V1']]),
-  Q('周末听说出了个新的 AI 工具，你会：', [
-    ['马上注册，十分钟内就玩上了', 'E3'],
-    ['先把教程收藏起来，以后再看', 'H3'],
-    ['先看看大家怎么评价，值得再试', 'V1 E1'],
-    ['手上的够用，不想再换', 'C1 E-1']]),
-  Q('你想让 AI 帮忙做一个三天的旅行计划：', [
-    ['让它直接出完整行程，照着走', 'R3'],
-    ['出完以后，我逐个去查营业时间和路线', 'V3 C1 R1'],
-    ['给它一堆条件，不满意就反复调', 'L3 C1'],
-    ['我先定好必去的点，让它补空档', 'C3 R1']]),
-  Q('AI 连着两次都没理解你的意思，你会：', [
-    ['换个说法再试一次', 'L2 E1'],
-    ['我自己来更快', 'C3 R-1'],
-    ['开个新对话，从头讲清楚', 'L1 C1 E1'],
-    ['把前面的内容整理成背景，一起重新发', 'L2 C1 V1']]),
-  Q('想入门一个陌生领域（比如理财），你更可能：', [
-    ['让 AI 讲一遍，听懂就算', 'R3'],
-    ['AI 讲完，再找书或课程对照一下', 'V3'],
-    ['让它排一份学习计划，存下来', 'H3'],
-    ['边问边学，问到不想问为止', 'L2 E1']]),
-  Q('deadline 逼近，AI 给的结果大概是 80 分：', [
-    ['够用了，交', 'R3'],
-    ['不行，要抠到 95 分才安心', 'C2 L2'],
-    ['我自己补上最后那 20 分', 'C3 V1'],
-    ['再让它跑几遍，看哪一版更好', 'E2 L1']]),
-  Q('同事说“这事让 AI 搞定就行”，你的第一反应是：', [
-    ['试试看，说不定真行', 'E2 R1'],
-    ['先问清楚“搞定”的标准是什么', 'V3 R1'],
-    ['其实我已经在用 AI 搞了，只是没说', 'R2 E1'],
-    ['不太放心，还是自己来', 'C2 V1 R-1']]),
-  Q('一个下午，你和 AI 在同一个问题上聊了二十多轮：', [
-    ['常有的事，改到满意为止', 'L3'],
-    ['有点上头，停不下来', 'L3 R1'],
-    ['聊到这个程度我会停下来，换个思路', 'C2 E1'],
-    ['基本不会，三轮内要么解决要么放弃', 'C1 V1 L-1']]),
-  Q('AI 在回答前加了一句：“我不确定，建议你核实。”你会：', [
-    ['觉得它挺诚实，反而更信它', 'R1 V1'],
-    ['照它说的，去核实一下', 'V3'],
-    ['大概率没错，先往下走', 'R3'],
-    ['觉得它不如直接给结论', 'C1 V1 R-1']]),
-  Q('要做一份 PPT，但完全没思路：', [
-    ['让 AI 出整份大纲和内容', 'R3'],
-    ['让它给三种风格，我来挑', 'E2 R1'],
-    ['先去找灵感和现成提示词，存下来再说', 'H3'],
-    ['我先画好框架，让它帮我填内容', 'C3']]),
-  Q('对于 AI 生成的文字或图片，你的态度是：', [
-    ['能直接用就直接用', 'R3'],
-    ['基本都要自己再动手改', 'C3 R1'],
-    ['拿来当灵感，然后自己重做', 'E2 C1'],
-    ['好的先存进素材库，以后可能用', 'H3']]),
-  Q('遇到想查的问题，你现在的习惯是：', [
-    ['优先问 AI，已经不太搜了', 'R3'],
-    ['AI 和搜索都开着，对着看', 'V3 R1'],
-    ['看情况，复杂的问题才问 AI', 'E1 R1'],
-    ['主要还是搜索，AI 当辅助', 'V1 C1 R-1']]),
-  Q('AI 突然告诉你：“这个我做不到。”你会：', [
-    ['换个绕过去的问法再试', 'E2 L2'],
-    ['马上换别的工具试试', 'E3'],
-    ['这类事以后我换种方式做', 'V1 R-2'],
-    ['自己接手，把它没做完的做完', 'C2']]),
-  Q('你让 AI 改了个 Excel 公式，运行起来没报错：', [
-    ['直接复制过去，能跑就行', 'R3'],
-    ['抽几行数据验证一下结果对不对', 'V3 R1'],
-    ['让它解释一遍，搞懂了再用', 'V1 C1 E1'],
-    ['顺手让它再做几个类似的模板存起来', 'H2 E1']]),
-  Q('凌晨，你想发一条很重要的消息，让 AI 来写：', [
-    ['直接发，它写得比我稳', 'R3'],
-    ['读三遍，改成我平时说话的样子', 'C3'],
-    ['让它写，再让它换几种语气重来', 'L2 E1'],
-    ['留几个备选，明早看一眼再发', 'V1 C1 H1']]),
-  Q('打开一个新对话，你的第一条消息通常是：', [
-    ['把背景、要求、格式一次说清', 'C3 V1'],
-    ['一句话需求，边聊边补', 'L2 R1'],
-    ['套用我存好的提示词模板', 'H3'],
-    ['先随便问点别的，试试它今天状态', 'E2']]),
-  Q('AI 写的东西读起来有明显的“AI 味”：', [
-    ['能交差就行，不纠结', 'R2'],
-    ['逐句改成自己的话', 'C3'],
-    ['让它“再自然一点”，反复调', 'L3'],
-    ['换个 AI 或换种提示再试', 'E2 L1']]),
-  Q('家人问你：“AI 到底靠不靠谱？”你会说：', [
-    ['挺靠谱的，我经常用', 'R2 E1'],
-    ['有用，但重要的事要自己再确认', 'V3'],
-    ['看用在哪，没有统一答案', 'V1 E1 C1'],
-    ['我也在摸索，试了不少', 'E3 H1']]),
-  Q('买东西拿不定主意，你让 AI 帮你选：', [
-    ['它说哪个我就买哪个', 'R3'],
-    ['让它列优缺点，我自己决定', 'C3 R1'],
-    ['再去看真实评测验证一下', 'V3'],
-    ['一直追问，直到我完全满意', 'L3 R1']]),
-  Q('翻看你的 AI 对话列表，大概是：', [
-    ['几百个对话，基本没整理', 'H2 L1'],
-    ['按项目分类，重要的会置顶', 'H3 C1'],
-    ['每个话题都开新的，很少翻旧的', 'E1'],
-    ['很少，聊完就删', 'C1 H-1']]),
-  Q('AI 帮你总结了一篇长文章：', [
-    ['看总结就够了', 'R3'],
-    ['总结加原文关键段落，对一下', 'V3 R1'],
-    ['让它按我习惯的格式重新总结', 'C2 L1'],
-    ['先存下来，改天细看', 'H3']]),
-  Q('你交给 AI 的任务，它做错了：', [
-    ['可能是我提示没写清，重新写', 'L2 C1'],
-    ['它不行，以后别让它做这类事', 'R-2 C1'],
-    ['也许换个模型或工具会好', 'E3'],
-    ['让它自己检查，找出错在哪', 'V2 L1 R1']]),
-  Q('面对一个很复杂的任务（比如整理几十份资料）：', [
-    ['交给 AI 自己跑完，我等结果', 'R3'],
-    ['分批喂给它，每批我都看一遍', 'C2 V2 R1'],
-    ['先做个小样试试再说', 'E2 V1'],
-    ['去找现成的工作流或模板来套', 'H3 E1']]),
-  Q('如果被要求“不用 AI 过一天”：', [
-    ['很难想象', 'R3'],
-    ['没问题，就是会慢一点', 'R-1 C1'],
-    ['一半的事会拖延，另一半自己做', 'R2 C1'],
-    ['有点想试试看会怎样', 'E2']]),
-  Q('要写一段需要个人观点的内容（比如自我介绍）：', [
-    ['AI 出稿，我签个名', 'R3'],
-    ['我说想法，让它整理语言', 'C2 R1'],
-    ['让它向我提问，通过聊天帮我理清', 'E2 L1'],
-    ['自己写，不想让 AI 碰', 'C3 R-2']]),
-  Q('刷到有人分享“用 AI 一天做完一周的活”：', [
-    ['想知道具体怎么做，先收藏', 'H3 E1'],
-    ['怀疑有点夸张，想先看看细节', 'V3'],
-    ['好像确实能做到，我也在往那个方向走', 'R2 E1'],
-    ['想马上复刻一遍', 'E3']]),
-  Q('AI 给你出了三个方案，看起来都还行：', [
-    ['选第一个，省事', 'R3'],
-    ['让它比较一下再选', 'L1 R1'],
-    ['三个都拆开，拼成我自己的方案', 'C3'],
-    ['再让它多出几个', 'E2 L1']]),
-  Q('有没有那么一件事，你本来不打算用 AI，后来还是用了？', [
-    ['经常，试着试着就用上了', 'E3'],
-    ['有过，用完还会琢磨一下要不要告诉别人', 'V1 R1 C1'],
-    ['很少，我很清楚什么该交给它', 'C3 V1'],
-    ['没有，我不太想', 'R-2 C1']]),
-  Q('AI 的回答里有一处你觉得不太对：', [
-    ['直接指出来，让它改', 'L2 V1'],
-    ['自己去查，看谁对', 'V3'],
-    ['它大概率没错，可能是我想错了', 'R2'],
-    ['突然想把整个回答都重新核对一遍', 'V2 R-2 C1']]),
-  Q('一份很重要的材料，你会用 AI 吗？', [
-    ['用，从头到尾让它参与', 'R3'],
-    ['用，但只在我指定的环节', 'C3 R1'],
-    ['用，并且让两个以上的 AI 互相检查', 'V3 E1 R1'],
-    ['尽量不用，出了错我担不起', 'V2 R-2']]),
-  Q('你学过的那些 AI 技巧，现在的状态是：', [
-    ['学了很多，真正天天用的没几个', 'H3 E1'],
-    ['有一套固定打法，基本不变', 'H2 C2'],
-    ['到处试，没有固定套路', 'E3'],
-    ['没专门学，想到什么就问什么', 'L1 R1']]),
-  Q('AI 的回答特别流畅，语气也特别笃定：', [
-    ['越流畅越想再查一下', 'V3'],
-    ['这会让我更放心', 'R3'],
-    ['我只关心它有没有按我的要求来', 'C3'],
-    ['有时会被说服，过一会儿才想再确认', 'L1 R1 V-1']]),
-  Q('你理想中和 AI 的关系是：', [
-    ['靠得住的助理，交代完就不用管', 'R3'],
-    ['得力的下属，每一步我都要过目', 'C3 V1'],
-    ['聊得来的搭档，边聊边想', 'L2 E1'],
-    ['有意思的玩具，总有新玩法', 'E3']])
-];
+/* 交错排列：相邻题属于不同维度，反向题均匀分散 */
+const ITEMS = (() => {
+  const out = [];
+  for (let i = 0; i < 5; i++) DIM_KEYS.forEach((d, k) => { const [t, rev] = RAW_ITEMS[d][(i + k) % 5]; out.push({ t, d, rev: !!rev }); });
+  return out;
+})();
+const QUESTIONS = ITEMS; // 兼容旧名
 
 /* 人格：target 为六个维度的“典型分”（0-100），用加权距离判定，不由单一维度决定 */
 const PERSONAS = {
@@ -428,7 +267,7 @@ const PERSONAS = {
     says: ['“先存着，回头看。”', '“这个提示词绝了，收藏！”', '“我先整理一下提示词库。”'],
     friend: { id: 'la', why: '你有模板，它有需求，凑成一对刚刚好。' },
     foe: { id: 'tan', why: '你刚存完十个工具，它又发现了第十一个。' },
-    target: { R: 45, V: 40, C: 35, E: 60, L: 40, H: 80 },
+    target: { R: 45, V: 40, C: 35, E: 45, L: 40, H: 88 },
     index: { d: 'H', label: '囤货指数', ex: '越高，收藏的方法越多', f: s => s.H },
     trait: '你囤的技巧和工具比用掉的还多，像过冬前的小仓鼠。',
     desc: '你对“更好的用法”有天然的嗅觉，看到好提示词、好教程就忍不住收藏。收藏夹里囤满了秘籍，用上的没几个，可你从不后悔——因为“以后一定用得上”。',
@@ -447,7 +286,7 @@ const PERSONAS = {
     says: ['“诶，这个新功能我试过了。”', '“我换了个工具，你看这个！”', '“等一下，我再试个新玩法。”'],
     friend: { id: 'huai', why: '你负责冲，它负责验货。' },
     foe: { id: 'tun', why: '你一路狂奔，它在后面一边收藏一边追。' },
-    target: { R: 40, V: 50, C: 40, E: 80, L: 50, H: 50 },
+    target: { R: 40, V: 50, C: 40, E: 90, L: 50, H: 40 },
     index: { d: 'E', label: '尝鲜指数', ex: '越高，越爱试新工具', f: s => s.E },
     trait: '哪里有新工具，哪里就有你摇着尾巴冲过去的身影。',
     desc: '别人还在问“AI 能干嘛”，你已经试了七八种用法，还换了两个工具。你不满足于“够用”，更想知道“还能怎样”。这让你总是走在朋友前面，也有一点点停不下来。',
@@ -481,43 +320,14 @@ const PERSONAS = {
 };
 
 /* ---------- 评分 ---------- */
-function dimRanges() {
-  const r = {};
-  DIM_KEYS.forEach(d => {
-    let mn = 0, mx = 0;
-    QUESTIONS.forEach(q => {
-      const vals = q.o.map(o => o.v[d] || 0);
-      mn += Math.min(...vals); mx += Math.max(...vals);
-    });
-    r[d] = { mn, mx };
-  });
-  return r;
-}
-const RANGES = dimRanges();
-
-/* answers: 每题选中的“原始选项下标”数组；未答题不计分。
-   得分按“随机作答基线”标准化：均值 50，±2.5 个标准差对应 0/100，
-   这样每个维度的 50 分都代表“和随机选差不多”，不同维度之间可比。 */
-function baseline(d, answered) {
-  let mean = 0, varr = 0;
-  QUESTIONS.forEach((q, i) => {
-    if (!answered[i]) return;
-    const vals = q.o.map(o => o.v[d] || 0);
-    const mu = vals.reduce((a, b) => a + b, 0) / vals.length;
-    mean += mu;
-    varr += vals.reduce((a, b) => a + (b - mu) ** 2, 0) / vals.length;
-  });
-  return { mean, sd: Math.sqrt(varr) };
-}
+/* answers[i] 为 0–4（对应 SCALE），反向题取 4-v；每维度得分 = 已答题得分总和 / 满分 × 100。随机作答的期望是 50。 */
 function scoreAnswers(answers) {
-  const answered = QUESTIONS.map((_, i) => answers[i] !== null && answers[i] !== undefined);
-  const s = {};
-  DIM_KEYS.forEach(d => {
-    let raw = 0;
-    QUESTIONS.forEach((q, i) => { if (answered[i]) raw += q.o[answers[i]].v[d] || 0; });
-    const b = baseline(d, answered);
-    s[d] = b.sd === 0 ? 50 : Math.max(0, Math.min(100, Math.round(50 + 20 * (raw - b.mean) / b.sd)));
+  const sum = {}, cnt = {}; DIM_KEYS.forEach(d => { sum[d] = 0; cnt[d] = 0; });
+  ITEMS.forEach((it, i) => {
+    const a = answers[i]; if (a === null || a === undefined) return;
+    sum[it.d] += it.rev ? 4 - a : a; cnt[it.d]++;
   });
+  const s = {}; DIM_KEYS.forEach(d => { s[d] = cnt[d] ? Math.max(0, Math.min(100, Math.round(100 * sum[d] / (4 * cnt[d])))) : 50; });
   return s;
 }
 function classify(s) {
@@ -629,25 +439,15 @@ function track(name, props) {
 
 /* ===== 状态 ===== */
 const N = QUESTIONS.length;
-function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function makeOrder(sid) {
-  let seed = 0; for (const c of sid) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
-  const r = mulberry(seed);
-  return QUESTIONS.map(q => {
-    const a = q.o.map((_, i) => i);
-    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-    return a;
-  });
-}
 function fresh() {
   const sid = uid();
-  return { sid, stage: 'landing', cur: 0, answers: Array(N).fill(null), order: makeOrder(sid), startedAt: 0, result: null, fb: null };
+  return { v: 4, sid, stage: 'landing', cur: 0, answers: Array(N).fill(null), startedAt: 0, result: null, fb: null };
 }
 let state = null;
 function loadState() {
   try {
     const s = JSON.parse(store.get(KEY) || 'null');
-    if (s && Array.isArray(s.answers) && s.answers.length === N && Array.isArray(s.order) && s.order.length === N) return s;
+    if (s && s.v === 4 && Array.isArray(s.answers) && s.answers.length === N) return s;
   } catch (e) {}
   return fresh();
 }
@@ -678,17 +478,18 @@ function viewLanding() {
     <h1>我用 AI<br>用成了鼠鼠。。。</h1>
     <div class="zoo" aria-label="六种动物结果">${IDS.map((id, i) => `<div class="pet" style="background:${PERSONAS[id].tint};animation-delay:${i * .25}s">${art(id)}${SHORT[id]}</div>`).join('')}</div>
     <p class="sub">${N} 道小题，看看你和 AI 是哪种相处方式 ✨</p>
-    <div class="meta"><span>约 4 分钟</span><span>测完直接出结果</span><span>可生成动物卡片</span></div>
+    <div class="meta"><span>约 2 分钟</span><span>测完直接出结果</span><span>可生成动物卡片</span></div>
     <div><button class="btn" data-act="start">测测我是哪只</button><p class="small disc">${DISCLAIMER}</p></div>
   </div>`;
 }
 function viewQuiz() {
   resetAccent();
-  const i = state.cur, q = QUESTIONS[i];
-  const opts = state.order[i].map(oi => `<button class="opt${state.answers[i] === oi ? ' on' : ''}" data-act="pick" data-oi="${oi}">${esc(q.o[oi].txt)}</button>`).join('');
+  const i = state.cur, it = QUESTIONS[i], cur = state.answers[i];
+  const btns = SCALE.map((lab, v) => `<button class="lik l${v}${cur === v ? ' on' : ''}" data-act="pick" data-v="${v}"><i class="dot"></i><span>${lab}</span></button>`).join('');
   return `<div class="top"><button class="back" data-act="back" ${i === 0 ? 'disabled' : ''} aria-label="上一题">上一题</button><span aria-live="polite">${i + 1} / ${N}</span></div>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${N}" aria-valuenow="${i + 1}"><i style="width:${(i + 1) / N * 100}%"></i><span class="walker" style="left:${(i + 1) / N * 100}%">${art(IDS[i % 6])}</span></div>
-    <div class="q"><div class="ask"><div class="avatar" style="background:${PERSONAS[IDS[i % 6]].tint}">${art(IDS[i % 6])}</div><div class="bub ai">${esc(q.t)}</div></div><div class="opts">${opts}</div></div>`;
+    <div class="q"><div class="ask"><div class="avatar" style="background:${PERSONAS[IDS[i % 6]].tint}">${art(IDS[i % 6])}</div><div class="bub ai stmt">${esc(it.t)}</div></div>
+      <p class="qhint">这句话，有多像你？</p><div class="scale">${btns}</div></div>`;
 }
 function head(p, r) {
   return `<div class="badge">你和 AI 的相处方式是……</div>
@@ -743,10 +544,10 @@ function start() {
   state = fresh(); state.stage = 'quiz'; state.startedAt = Date.now(); save();
   track('test_start'); render(); window.scrollTo(0, 0);
 }
-function pick(oi) {
+function pick(v) {
   if (busy) return; busy = true;
-  const i = state.cur; state.answers[i] = oi; save();
-  document.querySelectorAll('.opt').forEach(b => b.classList.toggle('on', +b.dataset.oi === oi));
+  const i = state.cur; state.answers[i] = v; save();
+  document.querySelectorAll('.lik').forEach(b => b.classList.toggle('on', +b.dataset.v === v));
   track('q_answered', { q: i });
   setTimeout(() => {
     if (state.stage !== 'quiz') { busy = false; return; }
@@ -844,7 +645,7 @@ function handle(e) {
   const el = e.target.closest('[data-act]'); if (!el) return;
   const a = el.dataset.act;
   if (a === 'start') start();
-  else if (a === 'pick') pick(+el.dataset.oi);
+  else if (a === 'pick') pick(+el.dataset.v);
   else if (a === 'back') back();
   else if (a === 'share') openShare();
   else if (a === 'close') closeSheet();
